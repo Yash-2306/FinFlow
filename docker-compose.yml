@@ -1,0 +1,30 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///./data/finflow.db
+      - LOG_LEVEL=INFO
+      - ENVIRONMENT=production
+    volumes:
+      - finflow-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  finflow-data:
